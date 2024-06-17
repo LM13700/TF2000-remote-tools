@@ -1,7 +1,9 @@
 # TF2000 Remote Tools
-Remote tools for Voltech TF2000 Frequency Response Analyzer control.  
+Remote tools for Voltech TF2000 Frequency Response Analyzer control.
+ 
 Example plots:
-
+![plot](./Documentation/bode_plot.svg)
+![plot](./Documentation/multiple_bode_plots.svg)
 #### 1. Installation
 Code was written using Python 3.11.4. It is recommended to use virtual environment to run the scripts:
 ```
