@@ -25,7 +25,10 @@ black --line-length 120 .\TF2000_tools.py
 ```
 
 ## 2. RS232 Communication
+F2000 sends measurement data via RS232 protocol.
+### 2.1 RS232 Cable
 Crosslinked cable is required to connect TF2000 to the RS232 port of the PC.  
+ ![plot](./Documentation/TF2000_rs232_cable.svg)  
 The device uses a somewhat strange DE-9 connector pinout:
 * PIN 6 - RX (input)
 * PIN 7 - CTS (input)
@@ -33,11 +36,14 @@ The device uses a somewhat strange DE-9 connector pinout:
 * PIN 9 - RTS (output)
 * Rest of the pins - Ground
 
-This requires a custom cable connecting *RX* to *TX* lines and *CTS* to *RTS* lines.
+This requires a custom cable connecting *RX* to *TX* lines and *CTS* to *RTS* lines as shown.  
+The GND pins on the TF2000 are internally connected.
 
+### 2.2 TF2000 serial port configuration
 TF2000 needs the following configuration to be able to communicate via RS232:  
 PRINT &rarr; Parallel Port >OFF< &rarr; Serial Port >ON< &rarr; Serial Output >Computer< &rarr; Baud Rate >1200<
 
+### 2.2 PC serial port configuration
 PC needs the following serial port configuration:
 * Baud: 1200
 * Data bits: 8
