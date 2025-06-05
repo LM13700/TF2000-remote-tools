@@ -57,13 +57,21 @@ class TF2000:
     ) -> list[str]:
         first_decade_frequency = frequency_decade_start
         frequency_points = np.array([])
+        iteration = 0
+
         while (first_decade_frequency * 10) <= frequency_decade_end:
+            if isinstance(measurements_per_decade, list):
+                measurements = measurements_per_decade[iteration]
+                iteration += 1
+            else:
+                measurements = measurements_per_decade
+
             frequency_points = np.append(
                 frequency_points,
                 np.geomspace(
                     first_decade_frequency,
                     first_decade_frequency * 10,
-                    measurements_per_decade,
+                    measurements,
                     endpoint=False,
                 ),
             )
@@ -148,6 +156,7 @@ class TF2000:
         title: str | None = "Bode Plot",
         line_style: str | None = ".",
         crossover_marker: bool | None = False,
+        plot_generator_amplitude: bool | None = False,
     ):
         """Plots bode plot from TF2000 data file
 
@@ -157,6 +166,7 @@ class TF2000:
         title -- plot title (default "Bode Plot")
         line_style -- magnitude and phase plots matplotlib line style (default ".")
         crossover_marker -- set to True to plot crossover info on the plot (default False)
+        plot_generator_amplitude -- set to True to plot generator amplitude info on the gain plot (default False)
         """
 
         try:
@@ -209,6 +219,15 @@ class TF2000:
         ax_gain.set_xscale("log")
         ax_gain.xaxis.set_major_formatter(ticker.EngFormatter(unit="Hz"))
         ax_gain.yaxis.set_major_formatter(ticker.EngFormatter(unit="dB"))
+
+        if plot_generator_amplitude is True:
+            color = "tab:orange"
+            ax_gen_amp = ax_gain.twinx()
+            ax_gen_amp.plot(freq_points, gen_amplitude_points, color, markersize=6)
+            ax_gen_amp.set_ylabel("Generator Amplitude", fontweight="bold")
+            ax_gen_amp.yaxis.set_major_formatter(ticker.EngFormatter(unit="mVrms"))
+            ax_gen_amp.tick_params(axis="y", labelcolor=color)
+            ax_gain.tick_params(axis="y", labelcolor="tab:blue")
 
         ax_phase.grid(which="major", color="#D9EAD3")
         ax_phase.grid(which="minor", color="#D9EAD3", linestyle=":")
@@ -349,7 +368,7 @@ class TF2000:
         file_access: str = FILE_APPEND,
         frequency_decade_start: int = F_DECADE_10Hz,
         frequency_decade_end: int = F_DECADE_100kHz,
-        measurements_per_decade: int = MEASUREMENTS_30,
+        measurements_per_decade: int | list[int] = MEASUREMENTS_30,
         averaging: str = AVERAGING_NORMAL,
         measurement_cycles: int = 50,
         generator_delay: int = 0,
@@ -365,7 +384,8 @@ class TF2000:
         file_access -- replace file current content or append (default FILE_APPEND)
         frequency_decade_start -- the decade of the frequency at which the sweep starts (default F_DECADE_10Hz)
         frequency_decade_end -- the decade of the frequency at which the sweep ends (default F_DECADE_100kHz)
-        measurements_per_decade -- number of measurements per decade (default MEASUREMENTS_30)
+        measurements_per_decade -- number of measurements per decade as int (default MEASUREMENTS_30) or list of ints
+            for each decade, where number of elements must equal number of selected decades
         averaging -- averaging option (default AVERAGING_NORMAL):
             NORMAL - averaging until deviation in average value is less than 1%, with upper limit of 50 cycles,
             LONG - averaging until deviation in average value is less than 0.2%, with upper limit of 250 cycles
@@ -399,13 +419,29 @@ class TF2000:
         if frequency_decade_start >= frequency_decade_end:
             raise ValueError("Invalid frequency decade range!")
 
-        if measurements_per_decade not in [
+        if isinstance(measurements_per_decade, int) and measurements_per_decade not in [
             self.MEASUREMENTS_15,
             self.MEASUREMENTS_30,
             self.MEASUREMENTS_60,
             self.MEASUREMENTS_120,
         ]:
             raise ValueError("Invalid measurements_per_decade value!")
+
+        if isinstance(measurements_per_decade, list):
+            if len(measurements_per_decade) != np.log10(
+                frequency_decade_end / frequency_decade_start
+            ):
+                raise ValueError(
+                    "Invalid number of measurements_per_decade list values!"
+                )
+            for measurements in measurements_per_decade:
+                if measurements_per_decade not in [
+                    self.MEASUREMENTS_15,
+                    self.MEASUREMENTS_30,
+                    self.MEASUREMENTS_60,
+                    self.MEASUREMENTS_120,
+                ]:
+                    raise ValueError("Invalid measurements_per_decade value!")
 
         if averaging not in [self.AVERAGING_NORMAL, self.AVERAGING_LONG]:
             raise ValueError("Invalid averaging value!")
